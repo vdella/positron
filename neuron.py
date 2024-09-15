@@ -14,24 +14,34 @@ class LayerUnit:
 
 
 class BiasUnit(LayerUnit):
-    future: List[LayerUnit]
+    future_units: List[LayerUnit]
+    future_weights: List[float]
 
     def __init__(self, identifier=0, value=None):
         super().__init__(identifier, value)
-        self.future = list()
+
+        self.future_units = list()
+        self.future_weights = list()
 
     def __repr__(self):
         return f'BiasUnit({self.id}: {self.value})'
 
 
 class Neuron(LayerUnit):
-    future: List[LayerUnit]
-    past: List[LayerUnit]
+    future_units: List[LayerUnit]
+    future_weights: List[float]
+
+    past_units: List[LayerUnit]
+    past_weights: List[float]
 
     def __init__(self, identifier=0, value=None):
         super().__init__(identifier, value)
-        self.future = list()
-        self.past = list()
+
+        self.future_units = list()
+        self.future_weights = list()
+
+        self.past_units = list()
+        self.past_weights = list()
 
     def __repr__(self):
         return f'Neuron({self.id}: {self.value})'
@@ -54,7 +64,6 @@ class Layer:
 
 class NeuralNetwork:
     layers: list
-    weights: list
 
 
 class FullyConnectedNeuralNetwork(NeuralNetwork):
@@ -73,14 +82,14 @@ class FullyConnectedNeuralNetwork(NeuralNetwork):
 
         # Connect the bias unit.
         for unit in dst.units[1:]:
-            src.units[0].future.append(unit)
-            unit.past.append(src.units[0])
+            src.units[0].future_units.append(unit)
+            unit.past_units.append(src.units[0])
 
         # Connect neuron units.
         for src_unit in src.units[1:]:
             for dst_unit in dst.units[1:]:
-                src_unit.future.append(dst_unit)
-                dst_unit.past.append(src_unit)
+                src_unit.future_units.append(dst_unit)
+                dst_unit.past_units.append(src_unit)
 
 
 if __name__ == '__main__':
@@ -98,14 +107,14 @@ if __name__ == '__main__':
 
     for unit in initial_layer.units:
         print(unit)
-        print(unit.future)
+        print(unit.future_units)
 
     print()
     print("Hidden layer:")
 
     for unit in hidden_layer.units[1:]:
         print(unit)
-        print(unit.past)
+        print(unit.past_units)
         print()
 
     print(hidden_layer.units)
@@ -114,10 +123,10 @@ if __name__ == '__main__':
     print(output_layer.units)
     print()
 
-    print(initial_layer.units[0].future)
+    print(initial_layer.units[0].future_units)
     print()
 
-    print(hidden_layer.units[1].past)
-    print(output_layer.units[1].past)
+    print(hidden_layer.units[1].past_units)
+    print(output_layer.units[1].past_units)
 
     print(FullyConnectedNeuralNetwork(initial_layer, hidden_layer, output_layer))
