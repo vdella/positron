@@ -74,6 +74,14 @@ class FullyConnectedNeuralNetwork(NeuralNetwork):
         for layer in layers:
             self.layers.append(layer)
 
+    def __repr__(self):
+        representation = '(' + self.__class__.__name__ + ':\n'
+
+        for layer in self.layers:
+            representation += f'\t{layer}\n'
+
+        return representation + ')'
+
 
     @staticmethod
     def connect(src: Layer, dst: Layer):
