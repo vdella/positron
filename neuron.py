@@ -74,6 +74,10 @@ class FullyConnectedNeuralNetwork(NeuralNetwork):
         for layer in layers:
             self.layers.append(layer)
 
+        for i in range(len(layers)):
+            if i < len(layers) - 1:
+                self.connect(layers[i], layers[i + 1])
+
     def __repr__(self):
         representation = '(' + self.__class__.__name__ + ':\n'
 
@@ -91,13 +95,19 @@ class FullyConnectedNeuralNetwork(NeuralNetwork):
         # Connect the bias unit.
         for unit in dst.units[1:]:
             src.units[0].future_units.append(unit)
+            src.units[0].future_weights.append(0)
+
             unit.past_units.append(src.units[0])
+            unit.past_weights.append(0)
 
         # Connect neuron units.
         for src_unit in src.units[1:]:
             for dst_unit in dst.units[1:]:
                 src_unit.future_units.append(dst_unit)
+                src_unit.future_weights.append(0)
+
                 dst_unit.past_units.append(src_unit)
+                dst_unit.past_weights.append(0)
 
 
 if __name__ == '__main__':
@@ -105,36 +115,36 @@ if __name__ == '__main__':
     hidden_layer = Layer(1, BiasUnit())
     output_layer = Layer(1)
 
-    FullyConnectedNeuralNetwork.connect(initial_layer, hidden_layer)
-    FullyConnectedNeuralNetwork.connect(hidden_layer, output_layer)
+    # FullyConnectedNeuralNetwork.connect(initial_layer, hidden_layer)
+    # FullyConnectedNeuralNetwork.connect(hidden_layer, output_layer)
 
-    print(initial_layer.units)
-    print()
-
-    print("Initial layer:")
-
-    for unit in initial_layer.units:
-        print(unit)
-        print(unit.future_units)
-
-    print()
-    print("Hidden layer:")
-
-    for unit in hidden_layer.units[1:]:
-        print(unit)
-        print(unit.past_units)
-        print()
-
-    print(hidden_layer.units)
-    print()
-
-    print(output_layer.units)
-    print()
-
-    print(initial_layer.units[0].future_units)
-    print()
-
-    print(hidden_layer.units[1].past_units)
-    print(output_layer.units[1].past_units)
+    # print(initial_layer.units)
+    # print()
+    #
+    # print("Initial layer:")
+    #
+    # for unit in initial_layer.units:
+    #     print(unit)
+    #     print(unit.future_units)
+    #
+    # print()
+    # print("Hidden layer:")
+    #
+    # for unit in hidden_layer.units[1:]:
+    #     print(unit)
+    #     print(unit.past_units)
+    #     print()
+    #
+    # print(hidden_layer.units)
+    # print()
+    #
+    # print(output_layer.units)
+    # print()
+    #
+    # print(initial_layer.units[0].future_units)
+    # print()
+    #
+    # print(hidden_layer.units[1].past_units)
+    # print(output_layer.units[1].past_units)
 
     print(FullyConnectedNeuralNetwork(initial_layer, hidden_layer, output_layer))
