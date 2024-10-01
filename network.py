@@ -12,9 +12,9 @@ class FullyConnectedNeuralNetwork:
         """
         self.layers = layers
         self.weights, self.biases = dict(), dict()
+        self.losses = list()
 
-        def xavier_initialization(n_in, n_out):
-            return np.sqrt(6 / (n_in + n_out))
+        xavier_initialization = lambda n_in, n_out: np.sqrt(6 / (n_in + n_out))
 
         for l in range(1, len(self.layers)):
             self.weights[f'W{l}'] = np.random.normal(
@@ -27,8 +27,8 @@ class FullyConnectedNeuralNetwork:
                 xavier_initialization(l, 1),
                 size=(self.layers[l], 1))
 
-
-        self.losses = list()
+    def __repr__(self):
+        return f"FullyConnectedNeuralNetwork(layers={self.layers})"
 
     @staticmethod
     def cross_entropy_loss(A, Y):
@@ -138,21 +138,3 @@ class FullyConnectedNeuralNetwork:
         cache = self.forward(X)
         output = cache[f'A{len(self.layers) - 1}']
         return np.argmax(output, axis=0)
-
-
-# # Synthetic dataset generation
-# np.random.seed(42)
-# m = 200  # Number of samples
-# X = np.random.randn(2, m)  # 2D features for each sample
-# Y = np.zeros((1, m))
-# Y[0, X[0, :] + X[1, :] > 0] = 1  # Simple linear separation: label 1 if sum of features is positive
-# Y_one_hot = np.eye(2)[Y.astype(int)].reshape(2, m)  # One-hot encoded labels
-#
-# # Define and train the neural network
-# nn = FullyConnectedNeuralNetwork([2, 4, 2])  # 2 inputs, 4 neurons in the hidden layer, 2 output classes
-# nn.fit(X, Y_one_hot, epochs=10000, learning_rate=0.1)
-#
-# # Predictions
-# predictions = nn.predict(X)
-# print(f"Predicted labels: {predictions}")
-# print(f"True labels: {Y.flatten()}")
