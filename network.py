@@ -1,31 +1,34 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
-
 from functions import *
 
+
 class NeuralNetwork:
-    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.01):
-        # Initialize weights and biases
-        self.W1 = np.random.randn(input_size, hidden_size) * 0.01
-        self.b1 = np.zeros((1, hidden_size))
-        self.W2 = np.random.randn(hidden_size, output_size) * 0.01
-        self.b2 = np.zeros((1, output_size))
+
+    def __init__(self, layers: list, learning_rate=0.01):
+        self.layers = layers
+        self.parameters = {}
+
+        for l in range(1, len(layers)):
+            self.parameters[f'W{l}'] = np.random.randn(layers[l-1], layers[l]) * 0.01
+            self.parameters[f'b{l}'] = np.zeros((1, layers[l]))
+
         self.learning_rate = learning_rate
         self.losses = []
 
     def forward(self, X):
-        # Forward propagation
-        self.Z1 = np.dot(X, self.W1) + self.b1
-        self.A1 = relu(self.Z1)
-        self.Z2 = np.dot(self.A1, self.W2) + self.b2
-        self.A2 = softmax(self.Z2)
-        return self.A2
+        for l in range(1, len(self.layers)):
 
-    def compute_loss(self, Y, Y_hat):
+            if l == 1:
+                self.parameters[f'Z{l}'] = np.dot(X, self.parameters[f'W{l}']) + self.parameters[f'b{l}']
+                self.parameters[f'A{l}'] = sigmoid(self.parameters[f'Z{l}'])
+            else:
+                self.parameters[f'Z{l}'] = np.dot(self.parameters[f'A{l-1}'], self.parameters[f'W{l}']) + self.parameters[f'b{l}']
+                self.parameters[f'A{l}'] = sigmoid(self.parameters[f'Z{l}']) \
+                    if l < len(self.layers) - 1 else softmax(self.parameters[f'Z{l}'])
+
+        return self.parameters[f'A{len(self.layers) - 1}']
+
+    @staticmethod
+    def compute_loss(Y, Y_hat):
         # Cross-entropy loss
         m = Y.shape[0]
         log_probs = -np.log(Y_hat[range(m), Y.argmax(axis=1)])
@@ -35,20 +38,21 @@ class NeuralNetwork:
     def backward(self, X, Y, Y_hat):
         # Backward propagation
         m = X.shape[0]
-        dZ2 = Y_hat - Y
-        dW2 = np.dot(self.A1.T, dZ2) / m
-        db2 = np.sum(dZ2, axis=0, keepdims=True) / m
 
-        dA1 = np.dot(dZ2, self.W2.T)
-        dZ1 = dA1 * relu_derivative(self.Z1)
-        dW1 = np.dot(X.T, dZ1) / m
-        db1 = np.sum(dZ1, axis=0, keepdims=True) / m
+        for l in range(1, len(self.layers))[::-1]:
+            if l == len(self.layers) - 1:
+                self.parameters[f'dZ{l}'] = Y_hat - Y
+                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T, self.parameters[f'dZ{l}']) / m
+                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'], axis=0, keepdims=True) / m
+            else:
+                self.parameters[f'dA{l}'] = np.dot(self.parameters[f'dZ{l + 1}'], self.parameters[f'W{l + 1}'].T)
+                self.parameters[f'dZ{l}'] = self.parameters[f'dA{l}'] * sigmoid_derivative(self.parameters[f'Z{l}'])
+                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T, self.parameters[f'dZ{l}']) / m \
+                    if l > 1 else np.dot(X.T, self.parameters[f'dZ{l}']) / m
+                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'], axis=0, keepdims=True) / m
 
-        # Update weights and biases
-        self.W2 -= self.learning_rate * dW2
-        self.b2 -= self.learning_rate * db2
-        self.W1 -= self.learning_rate * dW1
-        self.b1 -= self.learning_rate * db1
+            self.parameters[f'W{l}'] -= self.learning_rate * self.parameters[f'dW{l}']
+            self.parameters[f'b{l}'] -= self.learning_rate * self.parameters[f'db{l}']
 
     def train(self, X, Y, epochs=1000):
         # Train the network
@@ -57,43 +61,10 @@ class NeuralNetwork:
             loss = self.compute_loss(Y, Y_hat)
             self.losses.append(loss)
             self.backward(X, Y, Y_hat)
+
             if i % 100 == 0:
                 print(f"Epoch {i}, Loss: {loss:.4f}")
 
     def predict(self, X):
         Y_hat = self.forward(X)
         return np.argmax(Y_hat, axis=1)
-
-
-if __name__ == '__main__':
-    # Load the Iris dataset
-    data = load_iris()
-    X = data.data  # 4 features (sepal length, sepal width, petal length, petal width)
-    Y = data.target.reshape(-1, 1)  # 3 classes (Setosa, Versicolour, Virginica)
-
-    # One-hot encode the target values
-    encoder = OneHotEncoder(sparse_output=False)
-    Y_encoded = encoder.fit_transform(Y)
-
-    # Standardize the input features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # Split the dataset into training and testing sets
-    X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y_encoded, test_size=0.2, random_state=42)
-
-    # Initialize and train the neural network
-    nn = NeuralNetwork(input_size=4, hidden_size=200, output_size=3, learning_rate=0.01)
-    nn.train(X_train, Y_train, epochs=1000)
-
-    # Plot the loss over epochs
-    plt.plot(nn.losses)
-    plt.title("Loss over Epochs for the Iris Dataset")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
-    plt.show()
-
-    # Predict on the test set and calculate accuracy
-    predictions = nn.predict(X_test)
-    accuracy = np.mean(np.argmax(Y_test, axis=1) == predictions)
-    print(f"Test Accuracy: {accuracy:.4f}")
