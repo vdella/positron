@@ -1,16 +1,33 @@
-def parse(resource):
-    input_feature_pair = []
+def retrieve_data_from(resource):
+    """
+    Retrieves input pairs and results from a resource/.
+    :param resource: file in the resource directory
+    :return: a dict containing lists of input pairs and a list of results
+    """
+
+    xs = []
+    ys = []
     results = []
 
     with open(resource) as f:
         for line in f.readlines():
             x, y, result = line.strip().split(',')
-            input_feature_pair.append((float(x), float(y)))
+
+            xs.append(float(x))
+            ys.append(float(y))
             results.append(float(result))
 
-    return input_feature_pair, results
+    return {
+        'xs': xs,
+        'ys': ys,
+        'results': results
+    }
 
 
 if __name__ == '__main__':
-    a = parse('resources/classification2.txt')
+    a = retrieve_data_from('data/classification2.txt')
+
     print(a)
+    print(a['xs'])
+    print(a['ys'])
+    print(a['results'])
