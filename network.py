@@ -19,15 +19,15 @@ class NeuralNetwork:
         self.losses = []  # Records losses along the epochs in order to plot them later.
 
     def forward(self, X):
-        for l in range(1, len(self.layers)):
+        self.parameters[f'Z1'] = (np.dot(X, self.parameters[f'W1'])
+                                  + self.parameters[f'b1'])
+        self.parameters[f'A1'] = sigmoid(self.parameters[f'Z1'])
 
-            if l == 1:  # If it's the first layer, the input is X ...
-                self.parameters[f'Z{l}'] = np.dot(X, self.parameters[f'W{l}']) + self.parameters[f'b{l}']
-                self.parameters[f'A{l}'] = sigmoid(self.parameters[f'Z{l}'])
-            else:  # ... otherwise, the input is the output of the previous layer.
-                self.parameters[f'Z{l}'] = np.dot(self.parameters[f'A{l-1}'], self.parameters[f'W{l}']) + self.parameters[f'b{l}']
-                self.parameters[f'A{l}'] = sigmoid(self.parameters[f'Z{l}']) \
-                    if l < len(self.layers) - 1 else softmax(self.parameters[f'Z{l}'])
+        for l in range(2, len(self.layers)):
+            self.parameters[f'Z{l}'] = (np.dot(
+                self.parameters[f'A{l-1}'], self.parameters[f'W{l}'])
+                                        + self.parameters[f'b{l}'])
+            self.parameters[f'A{l}'] = sigmoid(self.parameters[f'Z{l}'])
 
         return self.parameters[f'A{len(self.layers) - 1}']
 
@@ -40,19 +40,25 @@ class NeuralNetwork:
         return loss
 
     def backward(self, X, Y, Y_hat):
-        m = X.shape[0]
-
         for l in range(1, len(self.layers))[::-1]:
             if l == len(self.layers) - 1:
                 self.parameters[f'dZ{l}'] = Y_hat - Y
-                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T, self.parameters[f'dZ{l}'])
-                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'], axis=0, keepdims=True)
+                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T,
+                                                   self.parameters[f'dZ{l}'])
+                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'],
+                                                   axis=0, keepdims=True)
             else:
-                self.parameters[f'dA{l}'] = np.dot(self.parameters[f'dZ{l + 1}'], self.parameters[f'W{l + 1}'].T)
-                self.parameters[f'dZ{l}'] = self.parameters[f'dA{l}'] * sigmoid_derivative(self.parameters[f'Z{l}'])
-                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T, self.parameters[f'dZ{l}']) \
+                self.parameters[f'dA{l}'] = np.dot(self.parameters[f'dZ{l + 1}'],
+                                                   self.parameters[f'W{l + 1}'].T)
+                self.parameters[f'dZ{l}'] = \
+                    (self.parameters[f'dA{l}']
+                    * sigmoid_derivative(self.parameters[f'Z{l}']))
+                self.parameters[f'dW{l}'] = np.dot(self.parameters[f'A{l - 1}'].T,
+                                                   self.parameters[f'dZ{l}']) \
                     if l > 1 else np.dot(X.T, self.parameters[f'dZ{l}'])
-                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'], axis=0, keepdims=True)
+                self.parameters[f'db{l}'] = np.sum(self.parameters[f'dZ{l}'],
+                                                   axis=0,
+                                                   keepdims=True)
 
             self.parameters[f'W{l}'] -= self.learning_rate * self.parameters[f'dW{l}']
             self.parameters[f'b{l}'] -= self.learning_rate * self.parameters[f'db{l}']

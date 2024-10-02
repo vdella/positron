@@ -1,22 +1,46 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from network import NeuralNetwork
+
+
+def normalize(arr):
+    return (arr - np.min(arr, axis=0)) / (np.max(arr, axis=0) - np.min(arr, axis=0))
 
 
 if __name__ == '__main__':
     np.random.seed(100)
 
-    df = pd.read_csv("data/classification2.txt", header=None)
+    dataset = 'data/classification2.txt'
 
-    X = df.iloc[:, :-1].values
-    y = df.iloc[:, -1].values
+    data = pd.read_csv(dataset, header=None)
 
-    pos, neg = (y==1).reshape(118, 1), (y==0).reshape(118, 1)
+    X = data.iloc[:, :-1].values
+    y = data.iloc[:, -1].values.reshape(-1, 1)
 
-    plt.scatter(X[pos[:, 0], 0], X[pos[:, 0], 1], c="r", marker="+")
-    plt.scatter(X[neg[:, 0], 0], X[neg[:, 0], 1], marker="o", s=10)
-    plt.xlabel("x1")
-    plt.ylabel("x2")
-    plt.legend(["Accepted","Rejected"],loc=0)
+    normalize = lambda a: (a - np.min(a, axis=0)) / (np.max(a, axis=0)
+                                                     - np.min(a, axis=0))
+    X = normalize(X)
 
+    side = np.random.permutation(2)
+
+    input_train = X[side[:1]]
+    output_train = y[side[:1]]
+
+    input_test = X[side[1:]]
+    output_test = y[side[1:]]
+
+    nn = NeuralNetwork([2, 200, 200, 1], learning_rate=0.0005)
+    nn.train(input_train, output_train, epochs=10000)
+
+    plt.plot(nn.losses)
+    plt.title("Loss over Epochs for the standard Dataset")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+
+    plt.savefig('loss-200neurons-200neurons-lr3zero.png')
     plt.show()
+
+    predictions = nn.predict(input_test)
+    accuracy = np.mean(np.argmax(output_test, axis=1) == predictions)
+    print(f"Test Accuracy: {accuracy:.4f}")
