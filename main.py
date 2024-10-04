@@ -9,7 +9,7 @@ def normalize(arr):
 
 
 if __name__ == '__main__':
-    np.random.seed(100)
+    np.random.seed(42)
 
     dataset = 'data/classification2.txt'
 
@@ -30,17 +30,19 @@ if __name__ == '__main__':
     input_test = X[side[1:]]
     output_test = y[side[1:]]
 
-    nn = NeuralNetwork([2, 200, 200, 1], learning_rate=0.0005)
+    nn = NeuralNetwork([2, 20, 1], learning_rate=0.0005, hidden_act='relu', output_act='sigmoid')
     nn.train(input_train, output_train, epochs=10000)
 
-    plt.plot(nn.losses)
-    plt.title("Loss over Epochs for the standard Dataset")
+    for epoch in nn.losses.keys():
+        if epoch % 1000 == 0:
+            print(f"Epoch {epoch}, Loss: {nn.losses[epoch]:.4f}")
+
+    plt.plot(nn.losses.keys(), nn.losses.values())
+    plt.title("Loss over epochs for the standard dataset")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-
-    plt.savefig('loss-200neurons-200neurons-lr3zero.png')
     plt.show()
 
     predictions = nn.predict(input_test)
     accuracy = np.mean(np.argmax(output_test, axis=1) == predictions)
-    print(f"Test Accuracy: {accuracy:.4f}")
+    print(f'Test Accuracy: {accuracy:.4f}')
