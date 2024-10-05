@@ -4,22 +4,12 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score
 from network import NeuralNetwork
+from display import present_losses_over_epochs
+from metrics import calculate_metrics
 
 
 def normalize(arr):
     return (arr - np.min(arr, axis=0)) / (np.max(arr, axis=0) - np.min(arr, axis=0))
-
-
-def calculate_metrics(output_test, predictions):
-    tp = np.sum((predictions == 1) & (output_test == 1))  # True Positives
-    fp = np.sum((predictions == 1) & (output_test == 0))  # False Positives
-    fn = np.sum((predictions == 0) & (output_test == 1))  # False Negatives
-
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-
-    return precision, recall, f1
 
 
 def plot_results(X, y, nn, h=0.01):
@@ -76,24 +66,17 @@ if __name__ == '__main__':
 
     input_train, input_test, output_train, output_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    nn = NeuralNetwork([2, 20, 20, 1], learning_rate=0.001, hidden_act='sigmoid', output_act='sigmoid')
+    nn = NeuralNetwork([2, 20, 20, 20, 20, 1], learning_rate=0.001, hidden_act='sigmoid', output_act='sigmoid')
     nn.train(input_train, output_train, epochs=10000)
 
-    for epoch in nn.losses.keys():
-        if epoch % 1000 == 0:
-            print(f"Epoch {epoch}, Loss: {nn.losses[epoch]:.4f}")
+    present_losses_over_epochs(nn)
 
-    # Assuming you have a trained model and input data, you can call this function as follows:
+    # Assuming a trained model and input data, plot the results.
     plot_results(X, y, nn)
 
     predictions = nn.predict(input_test)
     accuracy = np.mean(np.argmax(output_test, axis=1) == predictions)
     print(f'Test Accuracy: {accuracy:.4f}')
-
-    # Calculate Precision, Recall, and F1 Score
-    precision = precision_score(output_test, predictions)
-    recall = recall_score(output_test, predictions)
-    f1 = f1_score(output_test, predictions)
 
     # Calculate Precision, Recall, and F1 Score using numpy
     precision, recall, f1 = calculate_metrics(output_test, predictions)
@@ -102,7 +85,12 @@ if __name__ == '__main__':
     print(f'Recall (Numpy): {recall:.4f}')
     print(f'F1 Score (Numpy): {f1:.4f}')
 
+    # Calculate Precision, Recall, and F1 Score using sklearn.
+    precision = precision_score(output_test, predictions)
+    recall = recall_score(output_test, predictions)
+    f1 = f1_score(output_test, predictions)
+
     # Display metrics
-    print(f'Sklearn-precision: {precision:.4f}')
-    print(f'Sklearn-recall: {recall:.4f}')
-    print(f'Sklearn-F1 Score: {f1:.4f}')
+    print(f'Precision (Sklearn): {precision:.4f}')
+    print(f'Recall (Sklearn): {recall:.4f}')
+    print(f'F1-Score (Sklearn): {f1:.4f}')
