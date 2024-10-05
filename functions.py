@@ -18,7 +18,9 @@ def relu_derivative(x):
 
 
 def softmax(x):
-    exps = np.exp(x - np.max(x, axis=1, keepdims=True))
+    """the softmax applies the standard exponential function to each element z[i] of the input vector z
+    (consisting of K real numbers), and normalizes these values by dividing by the sum of all these exponentials."""
+    exps = np.exp(x - x.max(axis=1, keepdims=True))
     return exps / np.sum(exps, axis=1, keepdims=True)
 
 
@@ -26,8 +28,4 @@ hidden_activation = {
     'sigmoid': (sigmoid, sigmoid_derivative),
     'relu': (relu, relu_derivative)
 }
-
-output_activation = {
-    'sigmoid': sigmoid,
-    'softmax': softmax
-}
+output_activation = {'sigmoid': sigmoid, 'softmax': softmax}
