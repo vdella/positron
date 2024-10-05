@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from network import NeuralNetwork
+from display import present_losses_over_epochs
 
 
 if __name__ == '__main__':
@@ -30,9 +31,7 @@ if __name__ == '__main__':
     nn = NeuralNetwork([4, 20, 20, 3], learning_rate=0.01, hidden_act='sigmoid', output_act='softmax')
     nn.train(X_train, Y_train, epochs=10000)
 
-    for epoch in nn.losses.keys():
-        if epoch % 1000 == 0:
-            print(f'Epoch {epoch}, Loss: {nn.losses[epoch]:.4f}')
+    present_losses_over_epochs(nn)
 
     # Plot the loss over epochs
     plt.plot(nn.losses.keys(), nn.losses.values())

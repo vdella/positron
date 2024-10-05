@@ -83,7 +83,6 @@ class NeuralNetwork:
             self.parameters[f'b{l}'] -= self.learning_rate * self.parameters[f'db{l}']
 
     def train(self, X, Y, epochs=1000):
-
         for i in range(epochs):
             Y_hat = self.forward(X)
             loss = self.compute_loss(Y, Y_hat)
